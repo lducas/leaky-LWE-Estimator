@@ -1,4 +1,4 @@
-# A Sage Toolkit to estimate the hardness of LWE with Side Information
+# A Sage Toolkit to attack and estimate the hardness of LWE with Side Information
 
 This repository contains the artifacts associated to the article
 
