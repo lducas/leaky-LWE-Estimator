@@ -4,7 +4,7 @@ This repository contains the artifacts associated to the article
 
 [DDGR20] **LWE with Side Information: Attacks and Concrete Security Estimation**
 by _Dana Dachman-Soled, Léo Ducas, Huijing Gong, Mélissa Rossi_
-https://eprint.iacr.org/2020/289.pdf
+https://eprint.iacr.org/2020/292.pdf
 
 The Appendix of that article contains a mini-tutorial.
 
