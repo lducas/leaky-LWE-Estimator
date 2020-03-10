@@ -36,15 +36,11 @@ sage: load("../framework/instance_gen.sage")
 Our full-fledged implementation contains an attack procedure that runs BKZ with iterating gradually the block size. It then compares the recovered secret with the actual one.
 
 ```sage
-sage: t = cputime()
-....: secret = dbdd.attack()
-....: str(cputime(t)) + "CPU Seconds for the attack"
+sage: secret = dbdd.attack()
 ```
 ```text
        Running the Attack      
 Running BKZ-42   Success ! 
-  
-120.73061799999999 CPU Seconds for the attack
 ```
 
 Here, the block size stopped at 42 while an average blocksize of 45.40 has been estimated. Let us now create four vectors v for making perfect hints. To simulate side information, we compute the hints with the function dbdd.leak(v).
@@ -150,9 +146,7 @@ While all the hints have been integrated, we finally estimate the security and r
 
 ```sage
 sage: beta, delta = dbdd.estimate_attack()
-....: t = cputime()
 ....: secret = dbdd.attack()
-....: str(cputime(t)) + " CPU Seconds for the attack"
 ```
 ```text
        Attack Estimation       
@@ -160,8 +154,6 @@ sage: beta, delta = dbdd.estimate_attack()
   
        Running the Attack      
 Running BKZ-27   Success ! 
-
-47.93729300000001 CPU Seconds for the attack
 ```
 
 This time, BKZ stopped at blocksize 27 while the estimation was around 26 bikz.
