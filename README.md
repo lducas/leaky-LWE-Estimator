@@ -15,7 +15,7 @@ The library itself is to be dound in the `framework` folder.
 
 ## How to use the full-fledged version
 The full-fledged implementation is called when the class of the instance is DBDD. Let us create a small LWE instance and estimate its security in bikz. The code should be run from the directories `Sec5.2_validation` or `Sec6_applications`.
-```python
+```sage
 sage: load("../framework/instance_gen.sage")
 ....: n = 70
 ....: m = n
@@ -25,8 +25,8 @@ sage: load("../framework/instance_gen.sage")
 ....: A, b, dbdd = initialize_from_LWE_instance(DBDD, n, q, m, D_e, D_s)
 ....: # In such parameter range, no need to integrate q-vectors
 ....: beta, delta = dbdd.estimate_attack()
-
-
+```
+```text
       Build DBDD from LWE      
  n= 70   m= 70   q=3301 
        Attack Estimation      
