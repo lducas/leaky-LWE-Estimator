@@ -9,7 +9,7 @@ https://eprint.iacr.org/2020/292.pdf
 The code is written for Sage 9.0 (Python 3 Syntax).
 
 ## Organization
-The library itself is to be dound in the `framework` folder. 
+The library itself is to be found in the `framework` folder. 
 `Sec5.2_validation` and `Sec6_applications` contain the code to reproduce our experiments.
 
 
