@@ -239,14 +239,14 @@ class DBDD_generic:
     def test_primitive_dual(self, V, action):
         raise NotImplementedError("This method is not generic.")
 
-    def estimate_attack(self, probabilistic=False, tours=1, silent=False):
+    def estimate_attack(self, probabilistic=False, union_bound=False, tours=1, silent=False):
         """ Assesses the complexity of the lattice attack on the instance.
         Return value in Bikz
         """
         (Bvol, Svol, dvol) = self.volumes()
         dim_ = self.dim()
         beta, delta = compute_beta_delta(
-            dim_, dvol, probabilistic=probabilistic, tours=tours)
+            dim_, dvol, probabilistic=probabilistic, union_bound=union_bound, tours=tours)
 
         self.dvol = dvol
         self.delta = delta
