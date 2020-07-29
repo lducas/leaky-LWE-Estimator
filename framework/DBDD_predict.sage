@@ -11,7 +11,7 @@ class DBDD_predict(DBDD_generic):
     in a prediction mode
     """
 
-    def __init__(self, B, S, mu, u=None, verbosity=1):
+    def __init__(self, B, S, mu, u=None, homogeneous=False, verbosity=1):
 
         self.Bvol = logdet(B)
         self.verbosity = verbosity
@@ -19,8 +19,16 @@ class DBDD_predict(DBDD_generic):
         self._dim = S.nrows()
         self.PP = 0 * S  # Span of the projections so far (orthonormal)
         # Orthogonal span of the intersection so far so far (orthonormal)
+        self.homogeneous = homogeneous
+
+        if homogeneous and mu is not None:
+            if scal(mu * mu.T) > 0:
+                raise InvalidArgument("Homogeneous instances must have mu=0")
+
         self.PI = 0 * S
-        self.PI[-1, -1] = 1
+        if not homogeneous:
+            self.PI[-1, -1] = 1
+            
         self.u = u
         self.u_original = u
         self.projections = 0
@@ -41,12 +49,11 @@ class DBDD_predict(DBDD_generic):
         dvol = Bvol - Svol / 2.
         return (Bvol, Svol, dvol)
 
+
     @not_after_projections
     @hint_integration_wrapper(force=True)
     def integrate_perfect_hint(self, v, l):
-
-        V = concatenate(v, -l)
-
+        V = self.homogeneize(v, l)
         for i in range(self.S.nrows()):
             if V[0, i]:
                 self.can_constraints[i] = None
@@ -68,7 +75,7 @@ class DBDD_predict(DBDD_generic):
     @not_after_projections
     @hint_integration_wrapper(force=True)
     def integrate_modular_hint(self, v, l, k, smooth=True):
-        V = concatenate(v, -l)
+        V = self.homogeneize(v, l)
         for i in range(self.S.nrows()):
             if V[0, i] and self.can_constraints[i] is not None:
                 f = (k / V[0, i]).numerator()
@@ -91,8 +98,10 @@ class DBDD_predict(DBDD_generic):
             raise InvalidHint("variance must be non-negative !")
         if variance == 0:
             raise InvalidHint("variance=0 : must use perfect hint !")
+        # Only to check homogeneity
+        self.homogeneize(v, l)     
 
-        V = concatenate(v, 0)
+        V = self.homogeneize(v, 0)
         if not aposteriori:
             VS = V * self.S
             d = scal(VS * V.T)
@@ -132,7 +141,7 @@ class DBDD_predict(DBDD_generic):
 
     @hint_integration_wrapper(force=False)
     def integrate_short_vector_hint(self, v):
-        V = concatenate(v, 0)
+        V = self.homogeneize(v, 0)
         V -= V * self.PP
         den = scal(V * V.T)
 

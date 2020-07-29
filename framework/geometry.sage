@@ -149,7 +149,6 @@ def lattice_modular_intersection(D, V, k):
     # Project v on Span(B)
     V = project_and_eliminate_dep(D, V)
     r = V.nrows()
-
     # append the equation in the dual
     V /= k
     # D = dual_basis(B)

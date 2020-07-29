@@ -115,55 +115,22 @@ def initialize_LAC_instance(dbdd_class, n, q, m, D_e, D_s, verbosity=1):
     return A, b, dbdd_class(B, S, mu, u, verbosity=verbosity)
 
 
-def initialize_NTRU_instance(dbdd_class, n, q, m, D_e, D_s, verbosity=1):
+def initialize_NTRU_instance(dbdd_class, n, q, D_f, D_g, verbosity=1):
     if verbosity:
         logging("     Build DBDD for NTRU HPS VERSION     ", style="HEADER")
-        logging("n=%3d \t m=%3d \t q=%d" % (n, m, q), style="VALUE")
+        logging("n=%3d \t \t q=%d" % (n, q), style="VALUE")
 
     assert (q % 16 == 0), "NTRU-HPS requires 16 to divide q"
-    A = matrix([[randint(0, q) for _ in range(n)] for _ in range(m)])
-    B = build_LWE_lattice(-A, q)
-    if q / 8 - 2 <= 2 * n / 3:
-        hamming_weight = (q / 16 - 1)
-    else:
-        hamming_weight = floor(n / 3)
-    s = hamming_weight * [1] + hamming_weight * \
-        [-1] + (n - 2 * hamming_weight) * [0]
-    shuffle(s)
-    s = vec(s)
-    e = vec([draw_from_distribution(D_e) for _ in range(m)])
-    b = (s * A.T + e) % q
-    tar = concatenate([b, [0] * n])
-    B = kannan_embedding(B, tar)
-    u = concatenate([e, s, [1]])
-    # define the mean and sigma of the instance
-    mu_e, s_e = average_variance(D_e)
-    mu_s, s_s = average_variance(D_s)
-    mu = vec(m * [mu_e] + n * [mu_s] + [1])
-    S = diagonal_matrix(m * [s_e] + n * [s_s] + [0])
-    return A, b, dbdd_class(B, S, mu, u, verbosity=verbosity)
 
+    # This construction of the lattice is not correct for NTRU
+    # It doesn't matter when we are only doing prediction though
+    if dbdd_class==DBDD:
+        raise NotImplementedError("NTRU KeyGen not actually implemented.")
 
-# def initialize_NTRU_prime_instance(dbdd_class, n, q, m, h, D_f,
-#                                    D_g, verbosity=1):
-#     if verbosity:
-#         logging("     Build DBDD for NTRU PRIME VERSION     ", style="HEADER")
-#         logging("n=%3d \t m=%3d \t q=%d \t h=%d" % (n, m, q, h), style="VALUE")
+    B = diagonal_matrix(n * [q] + n * [1])
+    mu_f, s_f = average_variance(D_f)
+    mu_g, s_g = average_variance(D_g)
+    mu = vec(n * [mu_f] + n * [mu_g])
+    S = diagonal_matrix(n * [s_f] + n * [s_g])
+    return None, None, dbdd_class(B, S, mu, None, homogeneous=True, verbosity=verbosity)
 
-#     A = matrix([[randint(0, q) for _ in range(n)] for _ in range(m)])
-#     B = build_LWE_lattice(-A, q)
-#     e = h * [1] + (n - h) * [0]
-#     shuffle(e)
-#     e = [(-1) ** randint(0, 1) * e[i] for i in range(len(e))]
-#     e = vec(e)
-#     s = vec([draw_from_distribution(D_g) for _ in range(m)])
-#     b = (s * A.T + e) % q
-#     tar = concatenate([b, [0] * n])
-#     B = kannan_embedding(B, tar)
-#     u = concatenate([e, s, [1]])
-#     # define the mean and sigma of the instance
-#     mu_e, s_e = average_variance(D_g)
-#     mu_s, s_s = average_variance(D_f)
-#     mu = vec(m * [mu_e] + n * [mu_s] + [1])
-#     S = diagonal_matrix(m * [s_e] + n * [s_s] + [0])
-#     return A, b, dbdd_class(B, S, mu, u, verbosity=verbosity)

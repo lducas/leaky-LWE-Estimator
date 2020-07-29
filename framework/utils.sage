@@ -239,7 +239,7 @@ def simBKZ(l, beta, tours=1, c=simBKZ_c):
 chisquared_table = {i: None for i in range(1000)}
 
 
-for i in range(1000):
+for i in range(3000):
     chisquared_table[i] = RealDistribution('chisquared', i)
 
 
@@ -270,7 +270,9 @@ def conditional_chi_squared(d1, d2, lt, l2):
     return proba
 
 
-def compute_beta_delta(d, logvol, tours=1, interpolate=True, probabilistic=False):
+def compute_beta_delta(d, logvol, tours=1, interpolate=True, 
+                       probabilistic=False, ignore_lift_proba=False,
+                       number_targets=1):
     """
     Computes the beta value for given dimension and volumes
     It is assumed that the instance has been normalized and sphericized, 
@@ -315,15 +317,15 @@ def compute_beta_delta(d, logvol, tours=1, interpolate=True, probabilistic=False
         delta = compute_delta(2)
         l = [log(bkzgsa_gso_len(logvol, i, d, delta=delta)) / log(2)
              for i in range(d)]
-        for beta in range(2, d):
-            for t in range(tours):
-                l = simBKZ(l, beta, 1)
-                proba = 1.
-                delta = compute_delta(beta)
-                i = d - beta
-                proba *= chisquared_table[beta].cum_distribution_function(
-                    2**(2 * l[i]))
+        for beta in [x/tours  for x in range(2*tours, d*tours)]:
+            l = simBKZ(l, beta, 1)
+            proba = 1.
+            delta = compute_delta(beta)
+            i = d - beta
+            proba *= chisquared_table[beta].cum_distribution_function(
+                2**(2 * l[i]))
 
+            if not ignore_lift_proba:
                 for j in range(2, int(d / beta + 1)):
                     i = d - j * (beta - 1) - 1
                     xt = 2**(2 * l[i])
@@ -332,12 +334,13 @@ def compute_beta_delta(d, logvol, tours=1, interpolate=True, probabilistic=False
                         d2 = d - i + (beta - 1)
                         proba *= conditional_chi_squared(beta - 1, d2, xt, x2)
 
+            for t in range(number_targets):
                 average_beta += beta * remaining_proba * proba
                 remaining_proba *= 1. - proba
 
-                if remaining_proba < .001:
-                    average_beta += beta * remaining_proba
-                    break
+            if remaining_proba < .001:
+                average_beta += beta * remaining_proba
+                break
 
         if remaining_proba > .01:
             raise ValueError("This instance may be unsolvable")

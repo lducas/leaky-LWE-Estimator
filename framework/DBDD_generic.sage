@@ -206,6 +206,14 @@ class DBDD_generic:
                          priority=-1, style="WARNING")
         return False
 
+    def homogeneize(self, v, l):
+        if self.homogeneous and l!=0:
+            raise InvalidHint("This hint is not homogeneous.")
+        if self.homogeneous:
+            return vec(v)
+        else:
+            return concatenate(v, -l)
+
     @not_after_projections
     @hint_integration_wrapper()
     def integrate_perfect_hint(self, v, l):
@@ -239,14 +247,16 @@ class DBDD_generic:
     def test_primitive_dual(self, V, action):
         raise NotImplementedError("This method is not generic.")
 
-    def estimate_attack(self, probabilistic=False, tours=1, silent=False):
+    def estimate_attack(self, probabilistic=False, tours=1, silent=False,
+        ignore_lift_proba=False, number_targets=1):
         """ Assesses the complexity of the lattice attack on the instance.
         Return value in Bikz
         """
         (Bvol, Svol, dvol) = self.volumes()
         dim_ = self.dim()
         beta, delta = compute_beta_delta(
-            dim_, dvol, probabilistic=probabilistic, tours=tours)
+            dim_, dvol, probabilistic=probabilistic, tours=tours,
+            ignore_lift_proba=ignore_lift_proba, number_targets=number_targets)
 
         self.dvol = dvol
         self.delta = delta
@@ -277,11 +287,11 @@ class DBDD_generic:
         n = len(Sd)
         I = []
         J = []
-        M = q * identity_matrix(n - 1)
+        M = q * identity_matrix(n - 1 + self.homogeneous)
         it = 0
         verbosity = self.verbosity
         if indices is None:
-            indices = range(n - 1)
+            indices = range(n - 1 + self.homogeneous)
         while self.dim() > min_dim:
             if (it % report_every == 0) and report_every > 1:
                 self.logging("[...%d]" % report_every, newline=False)
