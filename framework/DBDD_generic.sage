@@ -206,6 +206,14 @@ class DBDD_generic:
                          priority=-1, style="WARNING")
         return False
 
+    def homogeneize(self, v, l):
+        if self.homogeneous and l!=0:
+            raise InvalidHint("This hint is not homogeneous.")
+        if self.homogeneous:
+            return vec(v)
+        else:
+            return concatenate(v, -l)
+
     @not_after_projections
     @hint_integration_wrapper()
     def integrate_perfect_hint(self, v, l):
@@ -239,14 +247,16 @@ class DBDD_generic:
     def test_primitive_dual(self, V, action):
         raise NotImplementedError("This method is not generic.")
 
-    def estimate_attack(self, probabilistic=False, union_bound=False, tours=1, silent=False):
+    def estimate_attack(self, probabilistic=False, tours=1, silent=False,
+        ignore_lift_proba=False, lift_union_bound=False, number_targets=1):
         """ Assesses the complexity of the lattice attack on the instance.
         Return value in Bikz
         """
         (Bvol, Svol, dvol) = self.volumes()
         dim_ = self.dim()
         beta, delta = compute_beta_delta(
-            dim_, dvol, probabilistic=probabilistic, union_bound=union_bound, tours=tours)
+            dim_, dvol, probabilistic=probabilistic, tours=tours, verbose=not silent,
+            ignore_lift_proba=ignore_lift_proba, number_targets=number_targets, lift_union_bound=lift_union_bound)
 
         self.dvol = dvol
         self.delta = delta
@@ -258,8 +268,13 @@ class DBDD_generic:
                          % (dvol, Bvol, Svol) +
                          "δ(β)=%.6f" % compute_delta(beta),
                          style="DATA", priority=2)
-            self.logging("dim=%3d \t δ=%.6f \t β=%3.2f " %
-                         (dim_, delta, beta), style="VALUE")
+            if delta is not None:
+                self.logging("dim=%3d \t δ=%.6f \t β=%3.2f " %
+                             (dim_, delta, beta), style="VALUE")
+            else:
+                self.logging("dim=%3d \t \t \t β=%3.2f " %
+                             (dim_, beta), style="VALUE")
+
             self.logging("")
         return (beta, delta)
 
@@ -277,11 +292,11 @@ class DBDD_generic:
         n = len(Sd)
         I = []
         J = []
-        M = q * identity_matrix(n - 1)
+        M = q * identity_matrix(n - 1 + self.homogeneous)
         it = 0
         verbosity = self.verbosity
         if indices is None:
-            indices = range(n - 1)
+            indices = range(n - 1 + self.homogeneous)
         while self.dim() > min_dim:
             if (it % report_every == 0) and report_every > 1:
                 self.logging("[...%d]" % report_every, newline=False)

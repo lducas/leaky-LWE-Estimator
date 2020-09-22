@@ -23,7 +23,7 @@ class DBDD_predict_diag(DBDD_generic):
     prediction mode
     """
 
-    def __init__(self, B, S, mu, u=None, verbosity=1):
+    def __init__(self, B, S, mu, u=None, homogeneous=False, verbosity=1):
         """constructor that builds a DBDD instance from a lattice, mean, sigma
         and a target
         ;min_dim: Number of coordinates to find to consider the problem solved
@@ -33,6 +33,7 @@ class DBDD_predict_diag(DBDD_generic):
         :u: The unique vector to be found (optinal, for verification purposes)
         :fp_type: Floating point type to use in FPLLL ("d, ld, dd, qd, mpfrX")
         """
+        self.homogeneous=homogeneous
         self.verbosity = verbosity
         if not is_diagonal(S):
             raise ValueError("given Σ not diagonal")
@@ -64,9 +65,11 @@ class DBDD_predict_diag(DBDD_generic):
         dvol = Bvol - Svol / 2.
         return (Bvol, Svol, dvol)
 
+
     @cannonical_direction_only
     @hint_integration_wrapper(force=True)
     def integrate_perfect_hint(self, V, l):
+        self.homogeneize(V, l)
         i, vi = cannonical_param(V)
         self.can_constraints[i] = None
         if self.PI[i]:
@@ -83,6 +86,7 @@ class DBDD_predict_diag(DBDD_generic):
     @cannonical_direction_only
     @hint_integration_wrapper(force=True)
     def integrate_modular_hint(self, V, l, k, smooth=True):
+        self.homogeneize(V, l)
 
         i, vi = cannonical_param(V)
         f = (k / vi).numerator()
@@ -102,6 +106,8 @@ class DBDD_predict_diag(DBDD_generic):
     @cannonical_direction_only
     @hint_integration_wrapper(force=True)
     def integrate_approx_hint(self, V, l, variance, aposteriori=False):
+        self.homogeneize(V, l)
+
         if variance < 0:
             raise InvalidHint("variance must be non-negative !")
         if variance == 0:
@@ -125,6 +131,9 @@ class DBDD_predict_diag(DBDD_generic):
     def integrate_approx_hint_fulldim(self, center, covariance, aposteriori=False):
         # Using http://www.cs.columbia.edu/~liulp/pdf/linear_normal_dist.pdf
         # with A = Id
+        if self.homogeneous:
+            raise NotImplementedError()
+
         if not is_diagonal(covariance):
             raise ValueError("given covariance not diagonal")
 

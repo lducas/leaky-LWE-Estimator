@@ -186,8 +186,8 @@ def compute_delta(k):
 
     if k != round(k):
         x = k - floor(k)
-        d1 = compute_delta(floor(x))
-        d2 = compute_delta(floor(x) + 1)
+        d1 = compute_delta(floor(k))
+        d2 = compute_delta(floor(k) + 1)
         return x * d2 + (1 - x) * d1
 
     k = int(k)
@@ -275,7 +275,9 @@ def conditional_chi_squared(d1, d2, lt, l2):
     return proba
 
 
-def compute_beta_delta(d, logvol, tours=1, interpolate=True, probabilistic=False, union_bound=False):
+def compute_beta_delta(d, logvol, tours=1, interpolate=True, 
+                       probabilistic=False, ignore_lift_proba=False, lift_union_bound=False,
+                       number_targets=1, verbose=False):
     """
     Computes the beta value for given dimension and volumes
     It is assumed that the instance has been normalized and sphericized, 
@@ -316,42 +318,39 @@ def compute_beta_delta(d, logvol, tours=1, interpolate=True, probabilistic=False
     else:
         remaining_proba = 1.
         average_beta = 0.
+        cumulated_proba = 0.
 
         delta = compute_delta(2)
         l = [log(bkzgsa_gso_len(logvol, i, d, delta=delta)) / log(2)
              for i in range(d)]
+        for beta in [x/tours  for x in range(2*tours, d*tours)]:
+            l = simBKZ(l, beta, 1)
+            proba = 1.
+            delta = compute_delta(beta)
+            i = d - beta
+            proba *= chisquared_table[beta].cum_distribution_function(
+                2**(2 * l[i]))
 
-        cumulated_proba = 0.
-        for beta in range(2, d):
-            for t in range(tours):
-                l = simBKZ(l, beta, 1)
-                proba = 1.
-                delta = compute_delta(beta)
-                i = d - beta
-                proba *= chisquared_table[beta].cum_distribution_function(2**(2 * l[i]))
-
-                # The "failing to lift" probability is only relevant in small blocksizes
-                # however it raise numerical underflows issues in large dims.
-                # Added an option to side-step lack of indepedence, upper bounding
-                # success probability by a union bound.
-
+            if not ignore_lift_proba:
                 for j in range(2, int(d / beta + 1)):
                     i = d - j * (beta - 1) - 1
                     xt = 2**(2 * l[i])
                     if j > 1:
-                        if not union_bound:
+                        if not lift_union_bound:
                             x2 = 2**(2 * l[i + (beta - 1)])
                             d2 = d - i + (beta - 1)
                             proba *= conditional_chi_squared(beta - 1, d2, xt, x2)
                         else:
                             proba = min(proba, chisquared_table[d-i].cum_distribution_function(xt))
 
+            for t in range(number_targets):
                 average_beta += beta * remaining_proba * proba
                 cumulated_proba += remaining_proba * proba
                 remaining_proba *= 1. - proba
 
-            if True: # proba > 1e-10:        
+            if verbose:        
                 print("β= %d,\t pr=%.4e, \t cum-pr=%.4e \t rem-pr=%.4e"%(beta, proba, cumulated_proba, remaining_proba))
+
             if remaining_proba < .001:
                 average_beta += beta * remaining_proba
                 break
@@ -359,8 +358,8 @@ def compute_beta_delta(d, logvol, tours=1, interpolate=True, probabilistic=False
         if remaining_proba > .01:
             raise ValueError("This instance may be unsolvable")
 
-        ddelta = compute_delta(average_beta)
-        return average_beta, ddelta
+        # ddelta = compute_delta(average_beta)
+        return average_beta, None
 
 
 def block4(A, B, C, D):

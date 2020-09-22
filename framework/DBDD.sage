@@ -12,7 +12,7 @@ class DBDD(DBDD_generic):
     the basis computations
     """
 
-    def __init__(self, B, S, mu, u=None, verbosity=1, float_type="ld"):
+    def __init__(self, B, S, mu, u=None, verbosity=1, homogeneous=False, float_type="ld"):
         """constructor that builds a DBDD instance from a lattice, mean, sigma
         and a target
         ;min_dim: Number of coordinates to find to consider the problem solved
@@ -28,6 +28,9 @@ class DBDD(DBDD_generic):
         self.S = S
         self.PP = 0 * S  # Span of the projections so far (orthonormal)
         self.mu = mu
+        self.homogeneous = homogeneous
+        if homogeneous and scal(mu * mu.T) > 0:
+            raise InvalidArgument("Homogeneous instances must have mu=0")
         self.u = u
         self.u_original = u
         self.expected_length = RR(sqrt(self.S.trace()) + 1)
@@ -76,11 +79,12 @@ class DBDD(DBDD_generic):
 
         raise InvalidHint("non-primitive (factor %d)." % num)
 
+
     @not_after_projections
     @hint_integration_wrapper(force=True, requires=["dual"],
                               invalidates=["primal"])
     def integrate_perfect_hint(self, v, l):
-        V = concatenate(v, -l)
+        V = self.homogeneize(v, l)
         VS = V * self.S
         den = scal(VS * V.T)
 
@@ -97,7 +101,7 @@ class DBDD(DBDD_generic):
     @not_after_projections
     @hint_integration_wrapper(force=True, requires=["dual"], invalidates=["primal"])
     def integrate_modular_hint(self, v, l, k, smooth=True):
-        V = concatenate(v, -l)
+        V = self.homogeneize(v, l)
         VS = V * self.S
         den = scal(VS * V.T)
 
@@ -116,9 +120,11 @@ class DBDD(DBDD_generic):
             raise InvalidHint("variance must be non-negative !")
         if variance == 0:
             raise InvalidHint("variance=0 : must use perfect hint !")
+        # Only to check homogeneity if necessary
+        self.homogeneize(v, l)            
 
         if not aposteriori:
-            V = concatenate(v, -l)
+            V = self.homogeneize(v, l)
             VS = V * self.S
             d = scal(VS * V.T)
             center = scal(self.mu * V.T)
@@ -146,6 +152,8 @@ class DBDD(DBDD_generic):
                                       covariance, aposteriori=False):
         # Using http://www.cs.columbia.edu/~liulp/pdf/linear_normal_dist.pdf
         # with A = Id
+        if self.homogeneous:
+            raise NotImplementedError()
 
         if not aposteriori:
             d = self.S.nrows() - 1
@@ -166,7 +174,7 @@ class DBDD(DBDD_generic):
                               requires=["primal"],
                               invalidates=["dual"])
     def integrate_short_vector_hint(self, v):
-        V = concatenate(v, 0)
+        V = self.homogeneize(v, 0)
         V -= V * self.PP
 
         if scal((V * self.S) * V.T) == 0:
