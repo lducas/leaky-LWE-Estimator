@@ -3,17 +3,11 @@ load("../framework/instance_gen.sage")
 verbosity = 2
 report_every = None
 
-"""  Example
-Uncomment the following to get the detailed computation
-"""
-# verbosity = 2
-# report_every = 20
-
-# FRODOKEM parameters
-n = 212
-m = 212
+# Kyber-512 round 2 parameters
+n = 512
+m = 512
 q = 3329
-D_s = build_centered_binomial_law(3)
+D_s = build_centered_binomial_law(2)
 D_e = D_s
 
 _, _, inst = initialize_from_LWE_instance(DBDD_predict_diag, n, q,
