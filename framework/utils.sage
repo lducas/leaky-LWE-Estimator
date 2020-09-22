@@ -239,7 +239,7 @@ def simBKZ(l, beta, tours=1, c=simBKZ_c):
 chisquared_table = {i: None for i in range(1000)}
 
 
-for i in range(1025):
+for i in range(3000):
     chisquared_table[i] = RealDistribution('chisquared', i)
 
 
