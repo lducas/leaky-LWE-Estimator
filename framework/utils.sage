@@ -186,8 +186,8 @@ def compute_delta(k):
 
     if k != round(k):
         x = k - floor(k)
-        d1 = compute_delta(floor(x))
-        d2 = compute_delta(floor(x) + 1)
+        d1 = compute_delta(floor(k))
+        d2 = compute_delta(floor(k) + 1)
         return x * d2 + (1 - x) * d1
 
     k = int(k)
@@ -239,7 +239,7 @@ def simBKZ(l, beta, tours=1, c=simBKZ_c):
 chisquared_table = {i: None for i in range(1000)}
 
 
-for i in range(3000):
+for i in range(1025):
     chisquared_table[i] = RealDistribution('chisquared', i)
 
 
@@ -253,6 +253,11 @@ def conditional_chi_squared(d1, d2, lt, l2):
     l2 = RR(l2)
 
     PE2 = D2(l2)
+    # In large dim, we can get underflow leading to NaN
+    # When this happens, assume lifting is successfully (underestimating security)
+    if PE2==0:
+        raise ValueError("Numerical underflow in conditional_chi_squared")
+
     steps = 5 * (d1 + d2)
 
     # Numerical computation of the integral
@@ -271,8 +276,8 @@ def conditional_chi_squared(d1, d2, lt, l2):
 
 
 def compute_beta_delta(d, logvol, tours=1, interpolate=True, 
-                       probabilistic=False, ignore_lift_proba=False,
-                       number_targets=1):
+                       probabilistic=False, ignore_lift_proba=False, lift_union_bound=False,
+                       number_targets=1, verbose=False):
     """
     Computes the beta value for given dimension and volumes
     It is assumed that the instance has been normalized and sphericized, 
@@ -313,6 +318,7 @@ def compute_beta_delta(d, logvol, tours=1, interpolate=True,
     else:
         remaining_proba = 1.
         average_beta = 0.
+        cumulated_proba = 0.
 
         delta = compute_delta(2)
         l = [log(bkzgsa_gso_len(logvol, i, d, delta=delta)) / log(2)
@@ -330,13 +336,20 @@ def compute_beta_delta(d, logvol, tours=1, interpolate=True,
                     i = d - j * (beta - 1) - 1
                     xt = 2**(2 * l[i])
                     if j > 1:
-                        x2 = 2**(2 * l[i + (beta - 1)])
-                        d2 = d - i + (beta - 1)
-                        proba *= conditional_chi_squared(beta - 1, d2, xt, x2)
+                        if not lift_union_bound:
+                            x2 = 2**(2 * l[i + (beta - 1)])
+                            d2 = d - i + (beta - 1)
+                            proba *= conditional_chi_squared(beta - 1, d2, xt, x2)
+                        else:
+                            proba = min(proba, chisquared_table[d-i].cum_distribution_function(xt))
 
             for t in range(number_targets):
                 average_beta += beta * remaining_proba * proba
+                cumulated_proba += remaining_proba * proba
                 remaining_proba *= 1. - proba
+
+            if verbose:        
+                print("β= %d,\t pr=%.4e, \t cum-pr=%.4e \t rem-pr=%.4e"%(beta, proba, cumulated_proba, remaining_proba))
 
             if remaining_proba < .001:
                 average_beta += beta * remaining_proba
@@ -345,8 +358,8 @@ def compute_beta_delta(d, logvol, tours=1, interpolate=True,
         if remaining_proba > .01:
             raise ValueError("This instance may be unsolvable")
 
-        ddelta = compute_delta(average_beta)
-        return average_beta, ddelta
+        # ddelta = compute_delta(average_beta)
+        return average_beta, None
 
 
 def block4(A, B, C, D):
