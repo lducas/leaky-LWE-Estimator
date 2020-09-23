@@ -13,6 +13,13 @@ from cost import *
 # GSA Intersect:             dim=1918      δ=1.002263      β=873.23
 # Probabilistic simulation:  dim=1918                      β=894.27
 
+# As expected, the GSA intersect prediction roughly match the 
+# one made by the kyber dedicated script :
+#
+# Kyber-512  : Primal attacks uses block-size 405 and 490 samples
+# Kyber-768  : Primal attacks uses block-size 625 and 655 samples
+# Kyber-1024 : Primal attacks uses block-size 877 and 860 samples
+
 
 print("           \t & n  \t&  β \t& β' \t& gates \t& memory ")
 print("Kyber-512  \t & %d\t& %d\t& %d\t& %.1f \t& %.1f "%summary(1025, 413))
