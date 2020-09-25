@@ -348,8 +348,10 @@ def compute_beta_delta(d, logvol, tours=1, interpolate=True,
                 cumulated_proba += remaining_proba * proba
                 remaining_proba *= 1. - proba
 
-            if verbose:        
-                print("β= %d,\t pr=%.4e, \t cum-pr=%.4e \t rem-pr=%.4e"%(beta, proba, cumulated_proba, remaining_proba))
+            if verbose:
+                print("β= %d,\t pr=%.4e, \t cum-pr=%.4e \t rem-pr=%.4e"%
+                        (beta, proba, cumulated_proba, remaining_proba), 
+                        end="\r" if cumulated_proba < 1e-4 else "\n")
 
             if remaining_proba < .001:
                 average_beta += beta * remaining_proba
