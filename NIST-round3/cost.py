@@ -1,7 +1,15 @@
 # Data for the cost of sieving from:
 # Estimating quantum speedups for lattice sieves
 # Martin R. Albrecht and Vlad Gheorghiu and Eamonn W. Postlethwaite and John M. Schanck
-# (data file "cost-estimate-list_decoding-classical.csv")
+
+# data file "cost-estimate-list_decoding-classical.csv"
+# The data used below is from the version of May 2020, available at 
+# https://eprint.iacr.org/eprint-bin/getfile.pl?entry=2019/1161&version=20200520:144757&file=1161.pdf
+# This datafile can be extracted from the pdf via the linux tool `pdfdetach'.
+# Another version of that datafile is more easily accessible at 
+# https://github.com/jschanck/eprint-2019-1161/blob/main/data/cost-estimate-list_decoding-classical.csv
+# and differ from the one we used by less than a bit at dim 376.
+
 from mpmath import mp
 from math import ceil, floor, exp, pi
 from math import log as ln
