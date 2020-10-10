@@ -11,9 +11,10 @@ class DBDD_predict(DBDD_generic):
     in a prediction mode
     """
 
-    def __init__(self, B, S, mu, u=None, homogeneous=False, verbosity=1):
+    def __init__(self, B, S, mu, u=None, homogeneous=False, verbosity=1, D=None, Bvol=None):
 
-        self.Bvol = logdet(B)
+        self.Bvol = Bvol or logdet(B)
+        assert check_basis_consistency(B, D, Bvol)
         self.verbosity = verbosity
         self.S = S
         self._dim = S.nrows()
@@ -28,7 +29,7 @@ class DBDD_predict(DBDD_generic):
         self.PI = 0 * S
         if not homogeneous:
             self.PI[-1, -1] = 1
-            
+
         self.u = u
         self.u_original = u
         self.projections = 0
@@ -99,7 +100,7 @@ class DBDD_predict(DBDD_generic):
         if variance == 0:
             raise InvalidHint("variance=0 : must use perfect hint !")
         # Only to check homogeneity
-        self.homogeneize(v, l)     
+        self.homogeneize(v, l)
 
         V = self.homogeneize(v, 0)
         if not aposteriori:
@@ -109,16 +110,11 @@ class DBDD_predict(DBDD_generic):
 
         else:
             VS = V * self.S
-
-            # test if eigenvector
-            if not scal(VS * V.T)**2 == scal(VS * VS.T) * scal(V * V.T):
-                raise RejectedHint("Not an eigenvector of Σ,")
             if not scal(VS * VS.T):
                 raise RejectedHint("0-Eigenvector of Σ forbidden,")
 
-            den = scal(V * V.T)
-            self.S -= (VS.T / den) * V / den
-            self.S += ((variance / den**2) * V.T) * V
+            den = scal(VS * V.T)
+            self.S += (((variance - den) / den**2) * VS.T ) * VS
 
     @not_after_projections
     @hint_integration_wrapper()

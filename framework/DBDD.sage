@@ -12,7 +12,7 @@ class DBDD(DBDD_generic):
     the basis computations
     """
 
-    def __init__(self, B, S, mu, u=None, verbosity=1, homogeneous=False, float_type="ld"):
+    def __init__(self, B, S, mu, u=None, verbosity=1, homogeneous=False, float_type="ld", D=None, Bvol=None):
         """constructor that builds a DBDD instance from a lattice, mean, sigma
         and a target
         ;min_dim: Number of coordinates to find to consider the problem solved
@@ -23,8 +23,10 @@ class DBDD(DBDD_generic):
         :fp_type: Floating point type to use in FPLLL ("d, ld, dd, qd")
         """
         self.verbosity = verbosity
-        self.B = B                  # The lattice Basis
-        self.D = None               # The dual Basis (only B or D is active)
+        self.B = B  # The lattice Basis
+        self.D = D  # The dual Basis
+        assert B or D # B or D must be active
+        assert check_basis_consistency(B, D, Bvol)
         self.S = S
         self.PP = 0 * S  # Span of the projections so far (orthonormal)
         self.mu = mu
@@ -121,7 +123,7 @@ class DBDD(DBDD_generic):
         if variance == 0:
             raise InvalidHint("variance=0 : must use perfect hint !")
         # Only to check homogeneity if necessary
-        self.homogeneize(v, l)            
+        self.homogeneize(v, l)
 
         if not aposteriori:
             V = self.homogeneize(v, l)
@@ -134,17 +136,12 @@ class DBDD(DBDD_generic):
         else:
             V = concatenate(v, 0)
             VS = V * self.S
-            # test if eigenvector
-            if not scal(VS * V.T)**2 == scal(VS * VS.T) * scal(V * V.T):
-                raise RejectedHint("Not an eigenvector of Σ,")
             if not scal(VS * VS.T):
                 raise RejectedHint("0-Eigenvector of Σ forbidden,")
 
-            den = scal(V * V.T)
-            self.mu -= (scal(self.mu * V.T) / den) * V
-            self.S -= (VS.T / den) * V / den
-            self.mu += (l / den) * V
-            self.S += ((variance / den**2) * V.T) * V
+            den = scal(VS * V.T)
+            self.mu += ((l - scal(self.mu * V.T)) / den) * VS
+            self.S += (((variance - den) / den**2) * VS.T ) * VS
 
     @not_after_projections
     @hint_integration_wrapper()

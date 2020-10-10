@@ -18,15 +18,21 @@ def test_dbdd_ppred(n, m, q, D_e, D_s, nb_hints, hint_weight):
     A, b, dbdd = initialize_from_LWE_instance(DBDD, n, q, m,
                                               D_e, D_s,
                                               verbosity=2)
-    dbdd_p = DBDD_predict(dbdd.B, matrix(RR, dbdd.S), dbdd.u, verbosity=2)
+    dbdd_o = DBDD_optimized(
+        copy(dbdd.B), copy(dbdd.S), copy(dbdd.mu), dbdd.u,
+        D=copy(dbdd.D), verbosity=2,
+    )
+    dbdd_p = DBDD_predict(dbdd.B, matrix(RR, dbdd.S), dbdd.mu, dbdd.u, D=dbdd.D, verbosity=2)
     hw = hint_weight
     if hw == 1:
         dbdd_d = DBDD_predict_diag(
-            dbdd.B, matrix(RR, dbdd.S), dbdd.u, verbosity=2)
+            dbdd.B, matrix(RR, dbdd.S), dbdd.mu, dbdd.u, D=dbdd.D, verbosity=2)
     d = n + m
     dbdd.estimate_attack()
+    dbdd_o.estimate_attack()
     dbdd_p.estimate_attack()
 
+    check_all_equal(dbdd, dbdd_o)
     check_all_equal(dbdd, dbdd_p)
     print("Ok so far.")
 
@@ -43,6 +49,7 @@ def test_dbdd_ppred(n, m, q, D_e, D_s, nb_hints, hint_weight):
                                             non_primitive_action="fail",
                                             force=force,
                                             catch_invalid_hint=False)
+                dbdd_o.integrate_perfect_hint(v, leak, force=force)
                 dbdd_p.integrate_perfect_hint(v, leak, force=force)
                 if hw == 1:
                     dbdd_d.integrate_perfect_hint(v, leak, force=force)
@@ -55,6 +62,9 @@ def test_dbdd_ppred(n, m, q, D_e, D_s, nb_hints, hint_weight):
                                             non_primitive_action="fail",
                                             force=force,
                                             catch_invalid_hint=False)
+                dbdd_o.integrate_modular_hint(v, leak % k, k,
+                                              smooth=True,
+                                              force=force)
                 dbdd_p.integrate_modular_hint(v, leak % k, k,
                                               smooth=True,
                                               force=force)
@@ -70,6 +80,9 @@ def test_dbdd_ppred(n, m, q, D_e, D_s, nb_hints, hint_weight):
                                            aposteriori=apost,
                                            force=force,
                                            catch_invalid_hint=False)
+                dbdd_o.integrate_approx_hint(v, leak, sigma,
+                                             aposteriori=apost,
+                                             force=force)
                 dbdd_p.integrate_approx_hint(v, leak, sigma,
                                              aposteriori=apost,
                                              force=force)
@@ -83,16 +96,20 @@ def test_dbdd_ppred(n, m, q, D_e, D_s, nb_hints, hint_weight):
             pass
 
         dbdd.estimate_attack(silent=True)
+        dbdd_o.estimate_attack(silent=True)
         dbdd_p.estimate_attack(silent=True)
         if hw == 1:
             dbdd_d.estimate_attack(silent=True)
 
+        check_all_equal(dbdd, dbdd_o)
         check_all_equal(dbdd, dbdd_p)
         if hw == 1:
             check_all_equal(dbdd, dbdd_d)
 
     dbdd.integrate_q_vectors(q)
+    dbdd_o.integrate_q_vectors(q)
     dbdd_p.integrate_q_vectors(q)
+    check_all_equal(dbdd, dbdd_o)
     check_all_equal(dbdd, dbdd_p)
 
     if hw == 1:
@@ -100,10 +117,14 @@ def test_dbdd_ppred(n, m, q, D_e, D_s, nb_hints, hint_weight):
         check_all_equal(dbdd, dbdd_d)
 
     dbdd.estimate_attack()
+    dbdd_o.estimate_attack()
     dbdd_p.estimate_attack()
     if hw == 1:
         dbdd_d.estimate_attack()
-    dbdd.attack()
+    _, solution = dbdd.attack()
+    _, solution_o = dbdd_o.attack()
+    assert (solution is not None) and (solution_o is not None)
+    assert (solution == solution_o) or (solution == - solution_o)
     logging("Passed that batch of tests !", style="SUCCESS")
 
 

@@ -76,8 +76,10 @@ def hint_integration_wrapper(force=False,
                         priority=2, newline=False)
 
             if "primal" in requires and self.B is None:
+                self.D = eliminate_linear_dependencies(self.D, dim=self.dim())
                 self.B = dual_basis(self.D)
             if "dual" in requires and self.D is None:
+                self.B = eliminate_linear_dependencies(self.B, dim=self.dim())
                 self.D = dual_basis(self.B)
 
             if "force" in kwargs:

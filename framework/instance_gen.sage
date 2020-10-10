@@ -4,6 +4,7 @@ load("../framework/proba_utils.sage")
 load("../framework/DBDD_predict_diag.sage")
 load("../framework/DBDD_predict.sage")
 load("../framework/DBDD.sage")
+load("../framework/DBDD_optimized.sage")
 
 
 def initialize_from_LWE_instance(dbdd_class, n, q, m, D_e,
@@ -26,7 +27,8 @@ def initialize_from_LWE_instance(dbdd_class, n, q, m, D_e,
     S = diagonal_matrix(m * [s_e] + n * [s_s] + [0])
     # draw matrix A and define the lattice
     A = matrix([[randint(0, q) for _ in range(n)] for _ in range(m)])
-    B = build_LWE_lattice(-A, q)
+    B = build_LWE_lattice(-A, q) # primal
+    D = build_LWE_lattice(A/q, 1/q) # dual
     # draw the secrets
     s = vec([draw_from_distribution(D_s) for _ in range(n)])
     e = vec([draw_from_distribution(D_e) for _ in range(m)])
@@ -34,8 +36,9 @@ def initialize_from_LWE_instance(dbdd_class, n, q, m, D_e,
     b = (s * A.T + e) % q
     tar = concatenate([b, [0] * n])
     B = kannan_embedding(B, tar)
+    D = kannan_embedding(D, concatenate([-b/q, [0] * n])).T
     u = concatenate([e, s, [1]])
-    return A, b, dbdd_class(B, S, mu, u, verbosity=verbosity)
+    return A, b, dbdd_class(B, S, mu, u, verbosity=verbosity, D=D, Bvol=m*log(q))
 
 
 def initialize_from_LWR_instance(dbdd_class, n, q, p, m, D_s, verbosity=1):
@@ -133,4 +136,3 @@ def initialize_NTRU_instance(dbdd_class, n, q, D_f, D_g, verbosity=1):
     mu = vec(n * [mu_f] + n * [mu_g])
     S = diagonal_matrix(n * [s_f] + n * [s_g])
     return None, None, dbdd_class(B, S, mu, None, homogeneous=True, verbosity=verbosity)
-
