@@ -50,6 +50,14 @@ class DBDD_optimized(DBDD):
     def dim(self):
         return self._dim
 
+    def S_diag(self):
+        S = self.Gamma * self.S * self.Gamma.T # Restore covariance matrix
+        return [S[i, i] for i in range(S.nrows())]
+
+    @need_lattices_bases
+    def volumes(self):
+        return super().volumes()
+
     def reduce(self, V):
         """ Transform a dual vector of the original lattice
         into the corresponding dual vector of the reduced lattice
@@ -58,10 +66,6 @@ class DBDD_optimized(DBDD):
         if V == 0:
             raise RejectedHint("Redundant hint")
         return V
-
-    @need_lattices_bases
-    def volumes(self):
-        return super().volumes()
 
     @need_lattices_bases
     def test_primitive_dual(self, V, action):

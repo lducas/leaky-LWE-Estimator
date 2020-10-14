@@ -129,7 +129,7 @@ def lattice_orthogonal_section(D, V, assume_full_rank=False, output_basis=True):
     return D
 
 
-def lattice_project_against(B, V, assume_full_rank=False, output_basis=True):
+def lattice_project_against(B, V, assume_full_rank=False, test_belonging=True, output_basis=True):
     """
     Compute the projection of the lattice L(B) orthogonally to Span(V). All vectors if V
     (or at least their projection on Span(B)) must belong to L(B).
@@ -143,11 +143,12 @@ def lattice_project_against(B, V, assume_full_rank=False, output_basis=True):
         V = project_and_eliminate_dep(B, V)
     r = V.nrows()
 
-    # Check that V belogs to L(B)
-    D = dual_basis(B)
-    M = D * V.T
-    if not lcm([x.denominator() for x in M.list()]) == 1:
-        raise ValueError("Not in the lattice")
+    # Check that V belongs to L(B)
+    if test_belonging:
+        D = dual_basis(B)
+        M = D * V.T
+        if not lcm([x.denominator() for x in M.list()]) == 1:
+            raise ValueError("Not in the lattice")
 
     # Project the basis orthogonally to v
     PV = projection_matrix(V)

@@ -304,6 +304,8 @@ class DBDD_generic:
                 self.logging("[...%d]" % report_every, newline=False)
             Sd = self.S_diag()
             L = [(Sd[i], i) for i in indices if i not in I]
+            if len(L) == 0:
+                break
             _, i = max(L)
             I += [i]
             try:
