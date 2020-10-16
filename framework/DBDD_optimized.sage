@@ -5,7 +5,7 @@ load("../framework/load_strategies.sage")
 load("../framework/DBDD.sage")
 load("../framework/proba_utils.sage")
 
-def need_lattices_bases(fn):
+def need_lattice_basis(fn):
     """
     Decorator which removes linear dependencies in lattice generator sets
     of the DBDD instance to manipulate bases in the execution of the
@@ -43,8 +43,25 @@ class DBDD_optimized(DBDD):
     def __init__(self, B, S, mu, u=None, verbosity=1, homogeneous=False, float_type="ld", D=None, Bvol=None):
         assert B or D
         self._dim = (B or D).nrows() # Lattice dimension
+
+        #### Lattice Reduction
+        # The textbook implementation of DBDD only removes vector in L(B),
+        # but for optimization purpose, here it uses a "reduced" version of L(B).
+        # The idea is to always have a FULL-RANK lattice, it enables to accelerate
+        # some computations. Moreover, this "reduced" version of the lattice
+        # lives in a smaller vector space (not the same one of L(B)), and so one
+        # manipulates smaller matrices.
+        # The following parameters Π ("Pi") and Γ ("Gamma") provide the link
+        # between the initial lattice and the reduced one.
+        # In this instance of DBDD, self.B and self.D will store respectively the
+        # primal and dual basis of the REDUCED lattice. To come back with the lattice
+        # with the original dimension, of primal basis B and of dual basis D,
+        # one has the following relations:
+        #   L(self.B) = L(B) ⋅ Π^T      L(B) = L(self.B) ⋅ Γ^T
+        #   L(self.D) = L(D) ⋅ Γ        L(D) = L(self.D) ⋅ Π
         self.Pi = identity_matrix(self._dim) # Reduction matrix
         self.Gamma = identity_matrix(self._dim) # Substitution matrix
+
         super().__init__(B, S, mu, u=u, verbosity=verbosity, homogeneous=homogeneous, float_type=float_type, D=D, Bvol=None)
 
     def dim(self):
@@ -54,20 +71,21 @@ class DBDD_optimized(DBDD):
         S = self.Gamma * self.S * self.Gamma.T # Restore covariance matrix
         return [S[i, i] for i in range(S.nrows())]
 
-    @need_lattices_bases
+    @need_lattice_basis
     def volumes(self):
         return super().volumes()
 
     def reduce(self, V):
         """ Transform a dual vector of the original lattice
         into the corresponding dual vector of the reduced lattice
+        (for more details, see "Lattice Reduction" comment in __init__)
         """
         V = V * self.Gamma
         if V == 0:
             raise RejectedHint("Redundant hint")
         return V
 
-    @need_lattices_bases
+    @need_lattice_basis
     def test_primitive_dual(self, V, action):
         V = self.reduce(V)
         return super().test_primitive_dual(self, V, action)
@@ -97,15 +115,17 @@ class DBDD_optimized(DBDD):
         self.S -= num / den
 
         # Realize the dimension reduction
+        # (for more details, see "Lattice Reduction" comment in __init__)
         Gamma, (_, pseudo_inv) = build_substitution_matrix(V)
         normalized_Gamma = Gamma*pseudo_inv
+        Pi = normalized_Gamma.T
 
         self.D = self.D * Gamma
-        self.mu = self.mu * normalized_Gamma
-        self.S = normalized_Gamma.T * self.S * normalized_Gamma
+        self.mu = self.mu * Pi.T
+        self.S = Pi * self.S * Pi.T
         self.PP = 0 * self.S
 
-        self.Pi = normalized_Gamma.T * self.Pi
+        self.Pi = Pi * self.Pi
         self.Gamma *= Gamma
 
     @not_after_projections
@@ -165,8 +185,9 @@ class DBDD_optimized(DBDD):
     def integrate_short_vector_hint(self, v):
         V = self.homogeneize(v, 0)
 
+        # Reduce the short vector if not already
         if V.ncols() > self.Pi.nrows(): # Cannot use self._dim here
-            V = V * self.Pi.T # Reduce the short vector if not already
+            V = V * self.Pi.T
         assert V.ncols() == self.Pi.nrows()
 
         V -= V * self.PP
@@ -197,7 +218,7 @@ class DBDD_optimized(DBDD):
             solution = solution * self.Gamma.T
         return super().check_solution(solution)
 
-    @need_lattices_bases
+    @need_lattice_basis
     def attack(self, beta_max=None, beta_pre=None, randomize=False, tours=1):
         beta, solution = super().attack(
             beta_max=beta_max,

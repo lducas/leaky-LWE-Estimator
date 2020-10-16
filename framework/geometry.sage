@@ -106,6 +106,11 @@ def lattice_orthogonal_section(D, V, assume_full_rank=False, output_basis=True):
     with the hyperplane orthogonal to Span(V).
     (V can be either a vector or a matrix)
     INPUT AND OUTPUT DUAL BASIS
+    :assume_full_rank: if True, assume V is already in Span(B),
+            to avoid projection computation (for optimization purpose)
+    :output_basis: if False, return only a lattice generator set instead of a basis,
+            to avoid expensive process of eliminating linear dependencies with LLL
+            (for optimization purpose)
     Algorithm:
     - project V onto Span(B)
     - project the dual basis onto orth(V)
@@ -129,10 +134,17 @@ def lattice_orthogonal_section(D, V, assume_full_rank=False, output_basis=True):
     return D
 
 
-def lattice_project_against(B, V, assume_full_rank=False, test_belonging=True, output_basis=True):
+def lattice_project_against(B, V, assume_full_rank=False, assume_belonging=False, output_basis=True):
     """
     Compute the projection of the lattice L(B) orthogonally to Span(V). All vectors if V
     (or at least their projection on Span(B)) must belong to L(B).
+    :assume_full_rank: if True, assume V is already in Span(B),
+            to avoid projection computation (for optimization purpose)
+    :assume_belonging: if True, assume V is already in L(B),
+            to avoid the verification (for optimization purpose)
+    :output_basis: if False, return only a lattice generator set instead of a basis,
+            to avoid expensive process of eliminating linear dependencies with LLL
+            (for optimization purpose)
     Algorithm:
     - project V onto Span(B)
     - project the basis onto orth(V)
@@ -144,7 +156,7 @@ def lattice_project_against(B, V, assume_full_rank=False, test_belonging=True, o
     r = V.nrows()
 
     # Check that V belongs to L(B)
-    if test_belonging:
+    if not assume_belonging:
         D = dual_basis(B)
         M = D * V.T
         if not lcm([x.denominator() for x in M.list()]) == 1:
@@ -167,6 +179,11 @@ def lattice_modular_intersection(D, V, k, assume_full_rank=False, output_basis=T
     Compute the intersection of the lattice L(B) with
     the lattice {x | x*V = 0 mod k}
     (V can be either a vector or a matrix)
+    :assume_full_rank: if True, assume V is already in Span(B),
+            to avoid projection computation (for optimization purpose)
+    :output_basis: if False, return only a lattice generator set instead of a basis,
+            to avoid expensive process of eliminating linear dependencies with LLL
+            (for optimization purpose)
     Algorithm:
     - project V onto Span(B)
     - append the equations in the dual
