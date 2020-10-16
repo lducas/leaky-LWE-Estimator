@@ -8,6 +8,13 @@ https://eprint.iacr.org/2020/292.pdf
 
 The code is written for Sage 9.0 (Python 3 Syntax).
 
+Contributors are:
+ - Dana Dachman-Soled
+ - Huijing Gong
+ - Léo Ducas
+ - Mélissa Rossi
+ - Thibauld Feneuil
+
 ## Organization
 The library itself is to be found in the `framework` folder. 
 `Sec5.2_validation` and `Sec6_applications` contain the code to reproduce our experiments.
@@ -15,6 +22,9 @@ The library itself is to be found in the `framework` folder.
 
 ## How to use the full-fledged version
 The full-fledged implementation is called when the class of the instance is DBDD. Let us create a small LWE instance and estimate its security in bikz. The code should be run from the directories `Sec5.2_validation` or `Sec6_applications`.
+
+> :information_source:  The class `DBDD`  is the _textbook implementation_ of DBDD described in [DDGR20]. The class `DBDD_optimized` is a _faster version_ of the class `DBDD`, combining some performance optimizations. It can be use exactly in the same way as `DBDD` for larger LWE instances.
+
 ```sage
 sage: load("../framework/instance_gen.sage")
 ....: n = 70

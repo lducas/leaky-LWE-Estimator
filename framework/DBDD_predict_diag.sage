@@ -23,7 +23,7 @@ class DBDD_predict_diag(DBDD_generic):
     prediction mode
     """
 
-    def __init__(self, B, S, mu, u=None, homogeneous=False, verbosity=1):
+    def __init__(self, B, S, mu, u=None, homogeneous=False, verbosity=1, D=None, Bvol=None):
         """constructor that builds a DBDD instance from a lattice, mean, sigma
         and a target
         ;min_dim: Number of coordinates to find to consider the problem solved
@@ -47,7 +47,8 @@ class DBDD_predict_diag(DBDD_generic):
         self.u_original = u
         self._dim = S.nrows()
         self.projections = 0
-        self.Bvol = logdet(B)
+        self.Bvol = Bvol or logdet(B)
+        assert check_basis_consistency(B, D, Bvol)
         self.save = {"save": None}
         self.can_constraints = S.nrows() * [1]
         self.can_constraints[-1] = None
