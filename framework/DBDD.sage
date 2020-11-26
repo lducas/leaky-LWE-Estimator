@@ -12,7 +12,7 @@ class DBDD(DBDD_generic):
     the basis computations
     """
 
-    def __init__(self, B, S, mu, u=None, verbosity=1, homogeneous=False, float_type="ld", D=None, Bvol=None):
+    def __init__(self, B, S, mu, u=None, verbosity=1, homogeneous=False, float_type="ld", D=None, Bvol=None, circulant=False):
         """constructor that builds a DBDD instance from a lattice, mean, sigma
         and a target
         ;min_dim: Number of coordinates to find to consider the problem solved
@@ -40,6 +40,7 @@ class DBDD(DBDD_generic):
         self.save = {"save": None}
         self.float_type = float_type
         self.estimate_attack(silent=True)
+        self.circulant = circulant
 
     def dim(self):
         if self.B is not None:
@@ -250,16 +251,19 @@ class DBDD(DBDD_generic):
                 bkz.lll_obj()
             # Recover the tentative solution,
             # undo distorition, scaling, and test it
-            v = vec(bkz.A[0])
-            v = u_den * v * L / denom
-            solution = matrix(ZZ, v.apply_map(round)) / u_den
 
-            if not self.check_solution(solution):
-                continue
+            # Tries all 3 first vectors because of 2 NTRU parasite vectors
+            for j in range(3):
+                v = vec(bkz.A[j])
+                v = u_den * v * L / denom
+                solution = matrix(ZZ, v.apply_map(round)) / u_den
 
-            self.logging("Success !", style="SUCCESS")
-            self.logging("")
-            return beta, solution
+                if not self.check_solution(solution):
+                    continue
+
+                self.logging("Success !", style="SUCCESS")
+                self.logging("")
+                return beta, solution
 
         self.logging("Failure ...", style="FAILURE")
         self.logging("")
