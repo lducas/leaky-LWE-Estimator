@@ -76,15 +76,17 @@ class NTRUEncrypt(object):
 		res = False
 
 		while (res == False):
-			f  =  self.sample(self.n,self.Dg,self.Dg-1)
+			f  =  self.sample(self.n,self.Df,self.Df-1)
 			res,fInv  =  self.__inv_poly_mod_prime_pow__(f)
 
 		g = self.sample(self.n,self.Dg,self.Dg)
 		h = self.red(g*fInv)
 		return ([h[i] for i in range(self.n)],([f[i] for i in range(self.n)], [g[i] for i in range(self.n)]))
 
-	def __init__(self, n, q):
+	def __init__(self, n, q, Df, Dg):
 		self.n = n
+		self.q = q		
 		self.q = q
-		self.Dg = int(round(n/3))
+		self.Df = Df
+		self.Dg = Dg
 

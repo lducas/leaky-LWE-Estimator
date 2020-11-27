@@ -14,7 +14,7 @@ except:
 def one_experiment(id, aargs):
     set_random_seed(id)
     np_seed(seed=id)
-    A, b, dbdd = initialize_NTRU_instance(DBDD, n, q, verbosity=0)
+    A, b, dbdd = initialize_NTRU_instance(DBDD, n, q, Df, Dg, verbosity=0)
     beta_pred, _ = dbdd.estimate_attack(probabilistic=True, silent=True, number_targets=n)
     beta, _ = dbdd.attack()
     return (beta, beta_pred)
@@ -42,4 +42,6 @@ print("n,\t real,\t pred_full")
 n = 15
 while n < 200:
     n = next_prime(n + 2)
+    Dg = int(round(n/3))
+    Df = Dg
     many_experiments(N_tests)

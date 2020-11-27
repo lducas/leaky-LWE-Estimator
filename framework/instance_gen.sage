@@ -119,15 +119,13 @@ def initialize_LAC_instance(dbdd_class, n, q, m, verbosity=1):
     return A, b, dbdd_class(B, S, mu, u, verbosity=verbosity)
 
 
-def initialize_NTRU_instance(dbdd_class, n, q, verbosity=1):
+def initialize_NTRU_instance(dbdd_class, n, q, Df, Dg, verbosity=1):
     if verbosity:
-        logging("     Build DBDD for NTRU HPS VERSION     ", style="HEADER")
+        logging("     Build DBDD from an NTRU instance (h=f/g [q])  ", style="HEADER")
         logging("n=%3d \t \t q=%d" % (n, q), style="VALUE")
 
-    assert (q % 16 == 0), "NTRU-HPS requires 16 to divide q"
-
-    mu_f, s_f = QQ(0), QQ(2/3)
-    mu_g, s_g = QQ(0), QQ(2/3)
+    mu_f, s_f = QQ(0), QQ(2*Df/n)
+    mu_g, s_g = QQ(0), QQ(2*Dg/n)
     mu = vec(n * [mu_f] + n * [mu_g])
     S = diagonal_matrix(n * [s_f] + n * [s_g])
 
@@ -136,7 +134,7 @@ def initialize_NTRU_instance(dbdd_class, n, q, verbosity=1):
         B = diagonal_matrix(n * [q] + n * [1])
         return None, None, dbdd_class(B, S, mu, None, homogeneous=True, verbosity=verbosity)
 
-    ntru = NTRUEncrypt(n, q)
+    ntru = NTRUEncrypt(n, q, Dg, Df)
     
     h,(f,g) = ntru.gen_keys()
     u = concatenate(vec(f), vec(g))
