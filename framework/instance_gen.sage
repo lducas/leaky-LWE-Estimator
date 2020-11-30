@@ -85,7 +85,7 @@ def initialize_round5_instance(dbdd_class, n, q, p, h, m, verbosity=1):
     B = kannan_embedding(B, tar)
     u = concatenate([e, s, [1]])
     # define the mean and sigma of the instance
-    raise NotImplementedError("Incorrect computation of the variance: Re-implementation needed. ")
+    #raise NotImplementedError("Incorrect computation of the variance: Re-implementation needed. ")
     D_s = {-1: RR(h / 2 / n), 0: RR((n - h) / n), 1: RR(h / 2 / n)}
     D_e = build_uniform_law(q / p)
     mu_e, s_e = average_variance(D_e)
