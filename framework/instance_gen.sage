@@ -133,8 +133,7 @@ def initialize_NTRU_instance(dbdd_class, n, q, Df, Dg, verbosity=1):
 
 
     if dbdd_class not in [DBDD, DBDD_optimized]:
-        B = diagonal_matrix(n * [q] + n * [1])
-        return None, None, dbdd_class(B, S, mu, None, homogeneous=True, verbosity=verbosity)
+        return None, None, dbdd_class(None, S, mu, None, Bvol=n*log(q), homogeneous=True, verbosity=verbosity)
 
     ntru = NTRUEncrypt(n, q, Dg, Df)
     

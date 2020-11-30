@@ -2,15 +2,12 @@
 # https://github.com/kpatsakis/NTRU_Sage/blob/master/ntru.sage
 # Under GPL 2.0 license.
 
-from time import time
-R.<x>  =  ZZ['x'];
-
-class NTRUEncrypt(object):
+class NTRUEncrypt:
 
 	def sample(self,NN, o,mo):
 	    s = [1]*o+[-1]*mo+[0]*(NN-o-mo)
 	    shuffle(s)
-	    return R(s)
+	    return self.R(s)
 
 	#reduces the coefficients of polynomial f modulo pp
 	#and "fixes" them so that they belong to [-pp/2,pp/2]
@@ -21,15 +18,15 @@ class NTRUEncrypt(object):
 	        clist[i]  =  clist[i]%pp
 	        if clist[i]>p2:
 	            clist[i] -= pp
-	    return R(clist)
+	    return self.R(clist)
 
 	def red(self, pol):
-		pol = pol % (x^self.n -1)
+		pol = pol % (self.x^self.n -1)
 		return self.modCoeffs(pol, self.q)
 
 	def __inv_poly_mod2__(self,poly):
-		k = 0;b = 1;c = 0*x;
-		f = poly;g = x^self.n-1
+		k = 0;b = 1;c = 0*self.x;
+		f = poly;g = self.x^self.n-1
 		f = self.modCoeffs(f, 2)
 		res = False
 		while True:
@@ -40,7 +37,7 @@ class NTRUEncrypt(object):
 				k += 1
 			if f.is_one():
 				e = (-k)%self.n
-				retval =  x^e*b 
+				retval =  self.x^e*b 
 				res = True
 				break
 			elif f.degree() == -1 or f.is_zero():
@@ -53,7 +50,7 @@ class NTRUEncrypt(object):
 			f = self.modCoeffs(f, 2)
 			c = self.modCoeffs(c, 2)
 		if res:
-			retval = retval%(x^self.n-1)
+			retval = retval%(self.x^self.n-1)
 			retval = self.modCoeffs(retval, 2)
 			return True, retval
 		else:
@@ -66,7 +63,7 @@ class NTRUEncrypt(object):
 			while qr<self.q:
 				qr = qr^2
 				b = b*(2-poly*b)
-				b = b%(x^self.n-1)
+				b = b%(self.x^self.n-1)
 				b = self.modCoeffs(b, self.q)
 			return True,b
 		else:
@@ -74,7 +71,8 @@ class NTRUEncrypt(object):
 
 	def gen_keys(self):
 		res = False
-
+		self.R =  ZZ['x']
+		self.x = self.R.gen()
 		while (res == False):
 			f  =  self.sample(self.n,self.Df,self.Df-1)
 			res,fInv  =  self.__inv_poly_mod_prime_pow__(f)
