@@ -249,11 +249,11 @@ class DBDD(DBDD_generic):
                                 strategies=strategies, max_loops=tours)
                 bkz(par)
                 bkz.lll_obj()
-            # Recover the tentative solution,
-            # undo distorition, scaling, and test it
 
             # Tries all 3 first vectors because of 2 NTRU parasite vectors
             for j in range(3):
+                # Recover the tentative solution,
+                # undo distorition, scaling, and test it
                 v = vec(bkz.A[j])
                 v = u_den * v * L / denom
                 solution = matrix(ZZ, v.apply_map(round)) / u_den
