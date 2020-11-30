@@ -132,7 +132,7 @@ def initialize_NTRU_instance(dbdd_class, n, q, Df, Dg, verbosity=1):
     S = diagonal_matrix(n * [s_f] + n * [s_g])
 
 
-    if dbdd_class!=DBDD:
+    if dbdd_class not in [DBDD, DBDD_optimized]:
         B = diagonal_matrix(n * [q] + n * [1])
         return None, None, dbdd_class(B, S, mu, None, homogeneous=True, verbosity=verbosity)
 
