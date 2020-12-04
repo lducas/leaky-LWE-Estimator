@@ -197,12 +197,17 @@ class DBDD_generic:
         solution is small enough.
         :solution: a vector
         """
-        if self.u == solution or self.u == - solution:
-            return True
+
+        if self.u is not None:
+            if self.circulant:
+                return (sorted(self.u.list()) == sorted(solution.list())) or (sorted(self.u.list()) == sorted((- solution).list())) 
+            return (self.u == solution or self.u == - vec(solution))
+
         if scal(solution * solution.T) > 1.2 * self.expected_length:
             return False
         if self.u is None:
             return True
+
         if self.verbosity:
             self.logging("Found an incorrect short solution.",
                          priority=-1, style="WARNING")
