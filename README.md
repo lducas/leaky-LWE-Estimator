@@ -23,7 +23,7 @@ The library itself is to be found in the `framework` folder.
 ## How to use the full-fledged version
 The full-fledged implementation is called when the class of the instance is DBDD. Let us create a small LWE instance and estimate its security in bikz. The code should be run from the directories `Sec5.2_validation` or `Sec6_applications`.
 
-> :information_source:  The class `DBDD`  is the _textbook implementation_ of DBDD described in [DDGR20]. The class `DBDD_optimized` is a _faster version_ of the class `DBDD`, combining some performance optimizations. It can be use exactly in the same way as `DBDD` for larger LWE instances.
+> :information_source:  The class `DBDD`  is the _textbook implementation_ of DBDD described in [DDGR20]. The class `DBDD_optimized` is a _faster version_ of the class `DBDD`, combining some performance optimizations. It can be used exactly in the same way as `DBDD` for larger LWE instances.
 
 ```sage
 sage: load("../framework/instance_gen.sage")
