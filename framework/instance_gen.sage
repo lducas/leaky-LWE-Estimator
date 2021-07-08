@@ -121,13 +121,13 @@ def initialize_LAC_instance(dbdd_class, n, q, m, verbosity=1):
     return A, b, dbdd_class(B, S, mu, u, verbosity=verbosity)
 
 
-def initialize_NTRU_instance(dbdd_class, n, q, Df, Dg, verbosity=1):
+def initialize_NTRU_instance(dbdd_class, n, q, nb_of_ones_in_Df, nb_of_ones_in_Dg, verbosity=1):
     if verbosity:
         logging("     Build DBDD from an NTRU instance (h=f/g [q])  ", style="HEADER")
         logging("n=%3d \t \t q=%d" % (n, q), style="VALUE")
 
-    mu_f, s_f = QQ(0), QQ(2*Df/n)
-    mu_g, s_g = QQ(0), QQ(2*Dg/n)
+    mu_f, s_f = QQ(0), QQ(2*nb_of_ones_in_Df/n)
+    mu_g, s_g = QQ(0), QQ(2*nb_of_ones_in_Dg/n)
     mu = vec(n * [mu_f] + n * [mu_g])
     S = diagonal_matrix(n * [s_f] + n * [s_g])
 
@@ -135,7 +135,7 @@ def initialize_NTRU_instance(dbdd_class, n, q, Df, Dg, verbosity=1):
     if dbdd_class not in [DBDD, DBDD_optimized]:
         return None, None, dbdd_class(None, S, mu, None, Bvol=n*log(q), homogeneous=True, verbosity=verbosity)
 
-    ntru = NTRUEncrypt(n, q, Dg, Df)
+    ntru = NTRUEncrypt(n, q, nb_of_ones_in_Df, nb_of_ones_in_Dg)
     
     h,(f,g) = ntru.gen_keys()
     u = concatenate(vec(f), vec(g))
