@@ -15,6 +15,8 @@ Contributors are:
  - Mélissa Rossi
  - Thibauld Feneuil
 
+This project was supported through the European Union PROMETHEUS project (Horizon 2020 Research and Innovation Program, grant 780701).
+
 ## Organization
 The library itself is to be found in the `framework` folder. 
 `Sec5.2_validation` and `Sec6_applications` contain the code to reproduce our experiments.
