@@ -8,7 +8,9 @@ dim = 2*nn+1
 
 for DBDD_type in [DBDD_predict_diag, DBDD_predict, DBDD, DBDD_optimized]:
 
-	logging(str(DBDD_type), style='HEADER')
+	logging("++++++++++++++++++++++++++++++++ \n + " +
+	          str(DBDD_type) +
+	        " +  \n ++++++++++++++++++++++++++++++++", style='BIGHEADER')
 	A, b, dbdd = initialize_from_LWE_instance(DBDD_type, nn, q, nn, D_s, D_s, verbosity=2)
 	v = vec([1]+(2*nn-1)*[0]) 
 	dbdd.estimate_attack()

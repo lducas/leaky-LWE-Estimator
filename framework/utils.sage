@@ -12,6 +12,7 @@ print_style = {'SUCCESS': '\x1b[1;37;42m',
                'WARNING': '\x1b[6;30;43m',
                'ACTION': '\x1b[1;37m',
                'HEADER': '\x1b[4;37m',
+               'BIGHEADER': '\x1b[1;37;40m',
                'NORMAL': '\x1b[0m',
                }
 
