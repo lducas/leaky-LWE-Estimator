@@ -58,12 +58,7 @@ def hint_to_string(v, l=None, lit="u", max_coeffs=5):
 
     return s
 
-
-ROUNDING_FACTOR = 2**64
-
 # Vectors will consistently be represented as 1*n matrices
-
-
 def vec(x):
     # Is this a 2-dim object, with only one row
     try:
@@ -125,18 +120,28 @@ def is_canonical_direction(v):
 
 
 def round_matrix_to_rational(M):
-    A = matrix(ZZ, (ROUNDING_FACTOR * matrix(M)).apply_map(round))
-    return matrix(QQ, A / ROUNDING_FACTOR)
+    L = M.list()
+    print(L)
+    exit(1)
+    L = [abs(x) for x in L if abs(x) > 0]
+    rounding_factor = ceil(2**64 / min(L)) if len(L) else 1
+    A = matrix(ZZ, (rounding_factor * matrix(M)).apply_map(round))
+    return matrix(QQ, A)/QQ(rounding_factor)
 
 
 def round_vector_to_rational(v):
-    A = vec(ZZ, (ROUNDING_FACTOR * vec(v)).apply_map(round))
-    return vec(QQ, A / ROUNDING_FACTOR)
+    L = v.list()
+    L = [abs(x) for x in L if abs(x) > 0]
+    rounding_factor = ceil(2**64 / min(L)) if len(L) else 1
+
+    A = vec(ZZ, (rounding_factor * vec(v)).apply_map(round))
+    return vec(QQ, A) / QQ(rounding_factor)
 
 
 def round_to_rational(x):
-    A = ZZ(round(x * ROUNDING_FACTOR))
-    return QQ(A) / QQ(ROUNDING_FACTOR)
+    rounding_factor = ceil(2**64 / abs(x)) if abs(x) else 1
+    A = ZZ(round(x * rounding_factor))
+    return QQ(A) / QQ(rounding_factor)
 
 
 def concatenate(L1, L2=None):
