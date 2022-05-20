@@ -52,7 +52,7 @@ class DBDD_predict(DBDD_generic):
 
 
     @not_after_projections
-    @hint_integration_wrapper(force=True)
+    @hint_integration_wrapper(assert_worthy=True)
     def integrate_perfect_hint(self, v, l):
         V = self.homogeneize(v, l)
         for i in range(self.S.nrows()):
@@ -77,6 +77,7 @@ class DBDD_predict(DBDD_generic):
     @hint_integration_wrapper(force=True)
     def integrate_modular_hint(self, v, l, k, smooth=True):
         V = self.homogeneize(v, l)
+
         for i in range(self.S.nrows()):
             if V[0, i] and self.can_constraints[i] is not None:
                 f = (k / V[0, i]).numerator()
@@ -84,8 +85,12 @@ class DBDD_predict(DBDD_generic):
 
         VS = V * self.S
         den = scal(VS * V.T)
+
         if den == 0:
             raise RejectedHint("Redundant hint")
+
+        if self.dim() * den < (k*k)/4:
+            raise InvalidHint("far from smooth: must use perfect hint !")
 
         if not smooth:
             raise NotImplementedError()
@@ -103,13 +108,16 @@ class DBDD_predict(DBDD_generic):
         self.homogeneize(v, l)
 
         V = self.homogeneize(v, 0)
+        VS = V * self.S
+
+        if self.dim() * variance / scal(V * V.T) < 1/4:
+            raise InvalidHint("variance ≈ 0: must use perfect hint !")
+
         if not aposteriori:
-            VS = V * self.S
             d = scal(VS * V.T)
             self.S -= (1 / (variance + d) * VS.T) * VS
 
         else:
-            VS = V * self.S
             if not scal(VS * VS.T):
                 raise RejectedHint("0-Eigenvector of Σ forbidden,")
 

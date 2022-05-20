@@ -68,7 +68,7 @@ class DBDD_predict_diag(DBDD_generic):
 
 
     @cannonical_direction_only
-    @hint_integration_wrapper(force=True)
+    @hint_integration_wrapper(assert_worthy=True)
     def integrate_perfect_hint(self, V, l):
         self.homogeneize(V, l)
         i, vi = cannonical_param(V)
@@ -94,6 +94,9 @@ class DBDD_predict_diag(DBDD_generic):
         self.can_constraints[i] = lcm(f, self.can_constraints[i])
         # vs = vi * self.S[i]
         den = vi**2 * self.S[i]
+
+        if self.dim() * self.S[i] < (k*k)/4:
+            raise InvalidHint("far from smooth: must use perfect hint !")
         if den == 0:
             raise RejectedHint("Redundant hint, Rejected.")
         if self.PP[i]:
@@ -112,10 +115,16 @@ class DBDD_predict_diag(DBDD_generic):
         if variance < 0:
             raise InvalidHint("variance must be non-negative !")
         if variance == 0:
-            raise InvalidHint("variance=0 : must use perfect hint !")
+            raise InvalidHint("variance = 0 : must use perfect hint !")
 
         i, vi = cannonical_param(V)
         vs = vi * self.S[i]
+        den = vi**2
+
+        if self.dim() * variance / den < 1/4:
+            raise InvalidHint("variance ≈ 0: must use perfect hint !")
+
+
         if self.PP[i]:
             raise InvalidHint("This direction has been projected out.")
 
@@ -125,7 +134,6 @@ class DBDD_predict_diag(DBDD_generic):
         else:
             if not vs:
                 raise RejectedHint("0-Eigenvector of Σ forbidden,")
-            den = vi**2
             self.S[i] = variance / den
 
     @hint_integration_wrapper()

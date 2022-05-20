@@ -84,7 +84,7 @@ class DBDD(DBDD_generic):
 
 
     @not_after_projections
-    @hint_integration_wrapper(force=True, requires=["dual"],
+    @hint_integration_wrapper(assert_worthy=True, requires=["dual"],
                               invalidates=["primal"])
     def integrate_perfect_hint(self, v, l):
         V = self.homogeneize(v, l)
@@ -111,6 +111,9 @@ class DBDD(DBDD_generic):
         if den == 0:
             raise RejectedHint("Redundant hint")
 
+        if self.dim() * den < (k*k)/4:
+            raise InvalidHint("far from smooth: must use perfect hint !")
+
         if not smooth:
             raise NotImplementedError()
 
@@ -125,6 +128,10 @@ class DBDD(DBDD_generic):
             raise InvalidHint("variance=0 : must use perfect hint !")
         # Only to check homogeneity if necessary
         self.homogeneize(v, l)
+
+        if self.dim() * variance / scal(v * v.T) < 1/4:
+            raise InvalidHint("variance ≈ 0: must use perfect hint !")
+
 
         if not aposteriori:
             V = self.homogeneize(v, l)
