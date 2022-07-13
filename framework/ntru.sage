@@ -6,6 +6,7 @@ class NTRUEncrypt:
 
 	def sample(self,NN, o,mo):
 	    s = [1]*o+[-1]*mo+[0]*(NN-o-mo)
+	    assert(len(s) == NN)
 	    shuffle(s)
 	    return self.R(s)
 
@@ -24,16 +25,16 @@ class NTRUEncrypt:
 		pol = pol % (self.x^self.n -1)
 		return self.modCoeffs(pol, self.q)
 
-	def __inv_poly_mod2__(self,poly):
+	def __inv_poly_mod_prime__(self,poly,p):
 		k = 0;b = 1;c = 0*self.x;
 		f = poly;g = self.x^self.n-1
-		f = self.modCoeffs(f, 2)
+		f = self.modCoeffs(f, p)
 		res = False
 		while True:
 			while f(0) == 0 and not f.is_zero():
 				f = f.shift(-1)
 				c = c.shift(1)
-				c = self.modCoeffs(c, 2)
+				c = self.modCoeffs(c, p)
 				k += 1
 			if f.is_one():
 				e = (-k)%self.n
@@ -47,19 +48,19 @@ class NTRUEncrypt:
 				b,c = c,b
 			f = f+g
 			b = b+c
-			f = self.modCoeffs(f, 2)
-			c = self.modCoeffs(c, 2)
+			f = self.modCoeffs(f, p)
+			c = self.modCoeffs(c, p)
 		if res:
 			retval = retval%(self.x^self.n-1)
-			retval = self.modCoeffs(retval, 2)
+			retval = self.modCoeffs(retval, p)
 			return True, retval
 		else:
 			return False,0
 
 	def __inv_poly_mod_prime_pow__(self,poly):
-		res,b = self.__inv_poly_mod2__(poly)
+		res,b = self.__inv_poly_mod_prime__(poly, self.p)
 		if res:
-			qr = 2
+			qr = self.p
 			while qr<self.q:
 				qr = qr^2
 				b = b*(2-poly*b)
@@ -83,7 +84,16 @@ class NTRUEncrypt:
 
 	def __init__(self, n, q, Df, Dg):
 		self.n = n
-		self.q = q		
+		self.q = q
+		F = factor(q)
+		if len(F) != 1:
+			raise ValueError("NTRU modulus must be a prime power")
+		if 2*Dg > n:
+			raise ValueError("The number of ones in NTRU secret key exceeds n/2")
+		if 2*Df > n:
+			raise ValueError("The number of ones in NTRU secret key exceeds n/2")
+
+		self.p, self.e = F[0]
 		self.q = q
 		self.Df = Df
 		self.Dg = Dg
