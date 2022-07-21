@@ -305,6 +305,8 @@ class DBDD_generic:
         M = q * identity_matrix(n - 1 + self.homogeneous)
         it = 0
         verbosity = self.verbosity
+        if report_every is None:
+            report_every = 0
         if indices is None:
             indices = range(n - 1 + self.homogeneous)
         while self.dim() > min_dim:
