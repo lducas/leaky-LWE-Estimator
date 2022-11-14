@@ -97,7 +97,7 @@ class DBDD_optimized(DBDD):
         return super().test_primitive_dual(self, V, action)
 
     @not_after_projections
-    @hint_integration_wrapper(force=True, requires=["dual"],
+    @hint_integration_wrapper(assert_worthy=True, requires=["dual"],
                               invalidates=["primal"])
     def integrate_perfect_hint(self, v, l):
         V = self.homogeneize(v, l)
@@ -139,6 +139,14 @@ class DBDD_optimized(DBDD):
     def integrate_modular_hint(self, v, l, k, smooth=True):
         V = self.homogeneize(v, l)
         V = self.embed(V)
+        VS = V * self.S
+        den = scal(VS * V.T)
+        if den == 0:
+            raise RejectedHint("Redundant hint")
+
+        if self.dim() * den < (k*k)/4:
+            raise InvalidHint("far from smooth: must use perfect hint !")
+
 
         if not smooth:
             raise NotImplementedError()
@@ -158,6 +166,10 @@ class DBDD_optimized(DBDD):
             raise InvalidHint("variance=0 : must use perfect hint !")
         # Only to check homogeneity if necessary
         self.homogeneize(v, l)
+
+        if self.dim() * variance / scal(v * v.T) < 1/4:
+            raise InvalidHint("variance ≈ 0: must use perfect hint !")
+
 
         if not aposteriori:
             V = self.homogeneize(v, l)

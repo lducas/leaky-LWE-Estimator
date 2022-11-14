@@ -38,10 +38,11 @@ def not_after_projections(fn):
 
 
 def hint_integration_wrapper(force=False,
+                             assert_worthy=False,
                              non_primitive_action=None,
                              requires=[],
                              invalidates=[],
-                             catch_invalid_hint=True,
+                             catch_invalid_hint=False,
                              estimate=True):
     def decorator(fn):
         def decorated(self, *args, **kwargs):
@@ -67,7 +68,7 @@ def hint_integration_wrapper(force=False,
                         "aposteriori", False) else "(conditionning)",
                         priority=1, newline=False)
                     self.logging(hint_to_string(
-                        args[0], args[1]) + " + χ(σ²=%.3f)" % args[2],
+                        args[0], "%.3f"%args[1]) + " ± %.3f" % sqrt(args[2]),
                         style='DATA', priority=2, newline=False)
 
                 if fn.__name__ == "integrate_short_vector_hint":
@@ -131,8 +132,8 @@ def hint_integration_wrapper(force=False,
             if "dual" in invalidates:
                 self.D = None
 
-            if (not _force) or _estimate:
-                return self.undo_if_unworthy(_force)
+            if (not _force) or _estimate or assert_worthy:
+                return self.undo_if_unworthy(_force, assert_worthy=assert_worthy)
             else:
                 self.logging("", newline=True)
                 return True
@@ -165,10 +166,12 @@ class DBDD_generic:
             if key != "save":
                 self.__dict__[key] = val
 
-    def undo_if_unworthy(self, force):
+    def undo_if_unworthy(self, force, assert_worthy=False):
         self.estimate_attack(silent=True)
         if (-self.beta, self.delta)\
                 <= (-self.save["beta"], self.save["delta"]):
+            if assert_worthy:
+                raise InvalidHint("Unworthy hint, absurd !") 
             if force:
                 self.logging("\t Unworthy hint, Forced it.", style="REJECT")
                 return True
@@ -302,6 +305,8 @@ class DBDD_generic:
         M = q * identity_matrix(n - 1 + self.homogeneous)
         it = 0
         verbosity = self.verbosity
+        if report_every is None:
+            report_every = 0
         if indices is None:
             indices = range(n - 1 + self.homogeneous)
         while self.dim() > min_dim:
