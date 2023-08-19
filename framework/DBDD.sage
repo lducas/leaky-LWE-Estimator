@@ -1,5 +1,6 @@
 from fpylll import *
 from fpylll.algorithms.bkz2 import BKZReduction
+from time import time
 
 load("../framework/load_strategies.sage")
 load("../framework/DBDD_generic.sage")
@@ -201,6 +202,7 @@ class DBDD(DBDD_generic):
         if self.B is None:
             self.B = dual_basis(self.D)
 
+        start = time()
         # Apply adequate distortion
         denom = lcm([x.denominator() for x in self.B.list()])
         B = self.B
@@ -209,13 +211,20 @@ class DBDD(DBDD_generic):
         L, Linv = square_root_inverse_degen(S, self.B)
         M = B * Linv
 
+        self.logging("Distorted \t %.1f sec"%(time()-start))
+
+
         # Make the matrix Integral
         denom = lcm([x.denominator() for x in M.list()])
         M = matrix(ZZ, M * denom)
+        self.logging("SCALED \t %.1f sec"%(time()-start))
 
         # Build the BKZ object
         G = GSO.Mat(IntegerMatrix.from_matrix(M), float_type=self.float_type)
         bkz = BKZReduction(G)
+
+        self.logging("created red \t %.1f sec"%(time()-start))
+
         if randomize:
             bkz.lll_obj()
             bkz.randomize_block(0, d, density=d / 4)
@@ -230,6 +239,8 @@ class DBDD(DBDD_generic):
             par = BKZ.Param(block_size=beta_pre, strategies=strategies)
             bkz(par)
             bkz.lll_obj()
+            self.logging("\t %.1f sec"%(time()-start))
+
         else:
             beta_pre = 2
         # Run BKZ tours with progressively increasing blocksizes
@@ -244,11 +255,14 @@ class DBDD(DBDD_generic):
 
             if beta == 2:
                 bkz.lll_obj()
+                self.logging("\t %.1f sec"%(time()-start))
+
             else:
                 par = BKZ.Param(block_size=beta,
                                 strategies=strategies, max_loops=tours)
                 bkz(par)
                 bkz.lll_obj()
+                self.logging("\t %.1f sec"%(time()-start))
 
             # Tries all 3 first vectors because of 2 NTRU parasite vectors
             for j in range(3):
